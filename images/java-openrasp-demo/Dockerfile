@@ -18,7 +18,7 @@ RUN apk add --no-cache \
     && test -s /opt/rasp/rasp.jar \
     && test -s /opt/rasp/rasp-engine.jar
 
-FROM tomcat:9.0.121-jdk11-temurin-jammy@sha256:e3ce46968c91d48ec3318f67f0064aacf96312dcebf1fc3e422f2d8a4162c0cf
+FROM tomcat:11.0.0-jdk11-temurin-jammy@sha256:62248de55af123882f542ad6a597a6680bfa6985cf99921788929a9f3f79248c
 
 LABEL org.opencontainers.image.title="MLCNP Java OpenRASP demo"
 LABEL org.opencontainers.image.description="Tomcat workload with the OpenRASP Java agent installed"
