@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use the MLCNP Blueprint, cite the accompanying paper and this software."
+title: "MLCNP Blueprint: Multi-Layered Cloud-Native Protection for Kubernetes"
+type: software
+authors:
+  - given-names: "Vinícius Matheus Romualdo"
+    family-names: "Santos"
+  - given-names: "Lina"
+    family-names: "Garcés"
+license: Apache-2.0
+repository-code: "https://github.com/vinimrs/mlcnp-blueprint"
+abstract: "A reproducible Kubernetes blueprint that combines perimeter, communication, and runtime protection boundaries."
+keywords:
+  - Kubernetes
+  - RASP
+  - WAF
+  - sidecar
+  - defense in depth
+preferred-citation:
+  type: conference-paper
+  title: "A Multi-Layered Architecture for Microservices with Self-Protection Properties"
+  authors:
+    - given-names: "Vinícius Matheus Romualdo"
+      family-names: "Santos"
+    - given-names: "Lina"
+      family-names: "Garcés"
+  collection-title: "AISecDev 2026"
+  year: 2026
+  month: 9

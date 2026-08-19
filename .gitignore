@@ -1,0 +1,23 @@
+.DS_Store
+.idea/
+.vscode/
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.kubeconfig
+kubeconfig
+.tool-versions
+
+# Local build and runtime artifacts
+bin/
+dist/
+results/
+*.log
+
+# Supplemental experimental material is maintained outside the public template.
+/research/

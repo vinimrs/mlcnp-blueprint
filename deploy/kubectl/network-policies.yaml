@@ -1,0 +1,86 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mlcnp-default-deny
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mlcnp-dns
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mlcnp-gateway-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: mlcnp
+      app.kubernetes.io/component: gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mlcnp-gateway-to-workloads
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: mlcnp
+      app.kubernetes.io/component: gateway
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: mlcnp
+              app.kubernetes.io/component: protected-workload
+      ports:
+        - protocol: TCP
+          port: 8081
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mlcnp-workloads-from-gateway
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: mlcnp
+      app.kubernetes.io/component: protected-workload
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: mlcnp
+              app.kubernetes.io/component: gateway
+      ports:
+        - protocol: TCP
+          port: 8081

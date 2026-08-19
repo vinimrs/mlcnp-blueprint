@@ -1,0 +1,104 @@
+name: Validate blueprint
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-validation:
+    name: Static validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install kubectl
+        uses: azure/setup-kubectl@c0c8b32d33a5244f1e5947304550403b63930415 # v4
+        with:
+          version: v1.31.4
+      - name: Validate template
+        run: make validate
+      - name: Validate Kubernetes schemas
+        run: |
+          kubectl kustomize deploy/kubectl | docker run --rm --interactive \
+            ghcr.io/yannh/kubeconform:v0.8.0@sha256:faffaf43f95aa6425306e1ab8d6fcad72acb9049158f38e574c085ea1ec0f64e \
+            -strict -summary -kubernetes-version 1.31.0
+
+  security-validation:
+    name: Security validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Check shell scripts
+        run: |
+          docker run --rm --volume "$PWD:/workspace" --workdir /workspace \
+            koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d \
+            scripts/*.sh
+      - name: Check Dockerfile
+        run: |
+          docker run --rm --volume "$PWD:/workspace" --workdir /workspace \
+            hadolint/hadolint:v2.15.1-debian@sha256:9a3944b7fddcb947d1ffd90829ac1a6e5c30479223358f249d8b96c7d0019e27 \
+            hadolint images/java-openrasp-demo/Dockerfile
+      - name: Scan source and Kubernetes configuration
+        run: |
+          docker run --rm --volume "$PWD:/workspace" \
+            aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 \
+            fs --scanners secret,misconfig --severity HIGH,CRITICAL \
+            --exit-code 1 --skip-dirs research /workspace
+
+  integration-test:
+    name: Kubernetes integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install kubectl
+        uses: azure/setup-kubectl@c0c8b32d33a5244f1e5947304550403b63930415 # v4
+        with:
+          version: v1.31.4
+      - name: Install kind
+        run: |
+          curl --fail --location --show-error \
+            https://kind.sigs.k8s.io/dl/v0.30.0/kind-linux-amd64 \
+            --output /tmp/kind
+          echo "517ab7fc89ddeed5fa65abf71530d90648d9638ef0c4cde22c2c11f8097b8889  /tmp/kind" \
+            | sha256sum --check --strict
+          chmod +x /tmp/kind
+          sudo mv /tmp/kind /usr/local/bin/kind
+      - name: Create cluster and load image
+        run: |
+          kind create cluster --wait 120s
+          docker build --platform linux/amd64 \
+            --tag mlcnp/java-openrasp-demo:local \
+            --file images/java-openrasp-demo/Dockerfile .
+          kind load docker-image mlcnp/java-openrasp-demo:local
+      - name: Install and test MLCNP
+        run: |
+          kubectl apply -k deploy/kubectl
+          scripts/test-cluster.sh
+      - name: Collect diagnostics
+        if: failure()
+        run: |
+          kubectl -n mlcnp-blueprint get all
+          kubectl -n mlcnp-blueprint describe pods
+          kubectl -n mlcnp-blueprint logs deployment/mlcnp-gateway --all-containers || true
+          kubectl -n mlcnp-blueprint logs deployment/mlcnp-application --all-containers || true
+      - name: Remove test cluster
+        if: always()
+        run: kind delete cluster

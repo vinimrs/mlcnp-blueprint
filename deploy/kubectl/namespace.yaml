@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mlcnp-blueprint
+  labels:
+    app.kubernetes.io/name: mlcnp
+    app.kubernetes.io/part-of: mlcnp

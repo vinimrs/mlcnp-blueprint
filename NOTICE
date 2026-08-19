@@ -1,0 +1,8 @@
+MLCNP Blueprint
+Copyright 2026 Vinícius Matheus Romualdo Santos and contributors
+
+The blueprint composes OpenRASP, OWASP Core Rule Set, NGINX, Kubernetes, Tomcat,
+and their base images. The local reference image downloads OpenRASP 1.3.7 from
+its official GitHub release and verifies its SHA-256 checksum; the binary is not
+stored in this repository. All third-party projects remain governed by their
+respective licenses and trademarks. See THIRD_PARTY_NOTICES.md for details.

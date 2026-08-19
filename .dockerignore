@@ -1,0 +1,11 @@
+**
+!images/
+!images/java-openrasp-demo/
+!images/java-openrasp-demo/Dockerfile
+!images/java-openrasp-demo/index.jsp
+!LICENSE
+!NOTICE
+!THIRD_PARTY_NOTICES.md
+!third_party/
+!third_party/openrasp/
+!third_party/openrasp/LICENSE
